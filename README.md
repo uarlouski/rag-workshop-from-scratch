@@ -4,6 +4,8 @@ A bare bones RAG application for educational purposes.
 
 DISCLAIMER: There are several concepts in this repository that can be implemented in much better ways.  The point of this repository is to remove unfamiliar terms and abstractions as much as possible to demonstrate the essential concepts of a RAG application.
 
+For a production ready RAG solution, check out https://ragie.ai
+
 ## Setup:
 
 Start a pgvector docker container:
