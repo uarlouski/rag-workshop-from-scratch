@@ -65,9 +65,9 @@ psql -h localhost -p 6432 -U postgres -c "CREATE DATABASE rag_demo;"
 psql -h localhost -p 6432 -U postgres rag_demo < schema.sql
 ```
 
-Export your OPENAI_API_KEY environment variable:
+Export your Hugging Face API Key environment variable:
 ```
-export OPENAI_API_KEY=sk-...
+source .env
 ```
 
 Poetry install:

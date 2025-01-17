@@ -1,13 +1,14 @@
 [tool.poetry]
-name = "rag-demo"
+name = "rag-workshop-from-scratch"
 version = "0.1.0"
 description = ""
-authors = ["Bob Remeika <bob@ragie.ai>"]
+authors = ["Bob Remeika <bob@ragie.ai>", "Sergio M. Ferro <Sergio_Ferro@epam.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-openai = "^1.51.2"
+torch = "^2.0.1"
+transformers = "^4.29.2"
 psycopg = "^3.2.3"
 
 
