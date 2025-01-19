@@ -10,20 +10,21 @@ Also, feel free to check out the [BGE family of models](https://huggingface.co/B
 ## Sample output
 ```
 Cleaning database...
-Creating embedding... 2048
-Creating embedding... 2048
-Creating embedding... 2048
+Creating embedding for chunk: ize
+human priors to ...
+Creating embedding for chunk: odifications, ensuri...
+Creating embedding for chunk: u et al., 2023; Qian...
+Creating embedding for chunk: ned agents and meta-...
+Creating embedding for chunk: n Hendrycks, Collin ...
 
 Total index time: 11.419859999790788ms
 
-Enter question: What are the main contributions from the paper?
-scores:  [0.4631096466649033, 0.4358613307724073, 0.4234167246123255, 0.41794766951856144, 0.4139573872089386]
+Enter question: what are the main contributions from the godel agents paper?
+scores:  [46.2205144035501, 45.83206449938195, 44.91440161297333, 44.8048227792767, 44.57226661278396]
 
 Using 5 chunks in answer. Answer:
 
-Query reranking is considered better than regular semantic search in this context because it involves the adaptation of search queries themselves to bridge the gap between the input text and the needed knowledge. The use of a trainable rewriter, as described, helps in refining the search query to better align it with the context needed by a large language model (LLM) reader. This process results in a higher snippet hit rate and improved retrieval effectiveness compared to standard retrieval methods. The usage of techniques like BM25 for content selection is shown to recall better documents than just relying on snippets. Furthermore, query rewriting significantly enhances the retriever's performance compared to the reader, suggesting that refining the search query can lead to more accurate and relevant retrievals, hence proving more effective than traditional semantic search methods.
-
-Would you like to see the raw prompt? [Y/n]
+Compiling declarative language model calls into self-improving pipelines
 ```
 
 ## Setup:
@@ -37,9 +38,6 @@ docker run -p 6432:5432  --name pgvector -e POSTGRES_PASSWORD=postgres -d pgvect
 ```
 
 Note: The host port for the docker container is 6432 instead of the normal 5432 to avoid port collisions
-
-Optional:
-
 
 Setup the database:
 ```
