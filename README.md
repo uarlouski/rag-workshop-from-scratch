@@ -5,7 +5,7 @@ A bare bones RAG application for educational purposes.
 DISCLAIMER: There are several concepts in this repository that can be implemented in much better ways.  The point of this repository is to remove unfamiliar terms and abstractions as much as possible to demonstrate the essential concepts of a RAG application.
 
 You should get acquainted first with RAG and [when to use it and when not to.](https://www.anthropic.com/news/contextual-retrieval)
-Also, feel free to check out [NV-EMbed-v2](https://huggingface.co/nvidia/NV-Embed-v2) an embedding model that has been specifically fine tuned for retrieval tasks. 
+Also, feel free to check out the [BGE family of models](https://huggingface.co/BAAI/bge-small-en-v1.5) a series of API accessible models for many RAG pieces such as embeddings, retrieval, reranking, etc. 
 
 ## Sample output
 ```
@@ -73,6 +73,9 @@ pyenv local 3.12.0
 
 ### Running
 
+`poetry run python -m rag_demo`
+
+You can skip the embedding step if you already have a database and want to experiment with different models. 
 `poetry run python -m rag_demo`
 
 ### Check chunks table first 5 rows

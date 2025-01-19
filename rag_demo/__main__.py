@@ -1,6 +1,9 @@
 ### Utility libraries
+import argparse
 import os
 import time
+from dotenv import load_dotenv
+import requests
 
 ### PostgreSQL adapter for Python
 import psycopg
@@ -8,18 +11,64 @@ import psycopg
 ### PyPDF for text extraction
 from PyPDF2 import PdfReader
 
-### Embeddings model
-import torch
-import torch.nn.functional as F
-from transformers import AutoModel
-
-### Text generation model
-from transformers import pipeline
+### Inference Client for HuggingFace
+# from huggingface_hub import InferenceClient
 
 ### Constants
+load_dotenv()
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
-CHUNK_SIZE = 512
-MODEL_ID = "meta-llama/Llama-3.2-3B"
+CHUNK_SIZE = 2048
+EMBEDDINGS_API_URL = "https://api-inference.huggingface.co/models/BAAI/bge-small-en-v1.5"
+MODEL_API_URL = "https://api-inference.huggingface.co/models/deepset/roberta-base-squad2"
+hf_api_key = os.environ.get("HF_API_KEY")
+HEADERS = {
+    "Authorization": f"""Bearer {hf_api_key}""",
+    "Content-Type": "application/json",
+    "x-wait-for-model": "true",
+}
+
+### HuggingFace inference client
+# hf_inference_client = InferenceClient(api_key=hf_api_key)
+
+### Argument parser
+parser = argparse.ArgumentParser(description="RAG Demo")
+parser.add_argument(
+    "--skip-embedding-step",
+    action="store_true",
+    help="Skip the embedding step and use the existing embeddings if this flag is provided.",
+)
+args = parser.parse_args()
+
+### Useful functions [can go to a utils.py file]
+def get_embedding(payload):
+    response = requests.post(
+        EMBEDDINGS_API_URL,
+        headers=HEADERS,
+        json=payload,
+    )
+    return response.json()
+
+# def get_answer(payload, client = hf_inference_client):
+#     messages = [
+#         {
+#             "role": "user",
+#             "content": payload["inputs"],
+#         }
+#     ]
+#     response = client.chat.completions.create(
+#         model=MODEL_ID,
+#         messages=messages,
+#     )
+#     return response.choices[0].message
+
+def get_answer(payload):
+    response = requests.post(
+        MODEL_API_URL,
+        headers=HEADERS,
+        json=payload,
+    )
+    return response.json()
+
 
 ### PostgreSQL database url and connection
 database_url = os.environ.get(
@@ -36,44 +85,42 @@ def split_string_by_length(input_string, length):
 
 # Loop through chunks from the pdf and create embeddings in the database
 
-print("Cleaning database...")
-db.execute("TRUNCATE TABLE chunks")
+if not args.skip_embedding_step:
+    print("Cleaning database...")
+    db.execute("TRUNCATE TABLE chunks")
 
-# load model with tokenizer
-model = AutoModel.from_pretrained('nvidia/NV-Embed-v2', trust_remote_code=True)
+    tic = time.perf_counter()
+    for filename in os.listdir(DATA_DIR):
+        file_path = os.path.join(DATA_DIR, filename)
 
-tic = time.perf_counter()
-for filename in os.listdir(DATA_DIR):
-    file_path = os.path.join(DATA_DIR, filename)
+        reader = PdfReader(file_path)
+        content = ""
+        for page in reader.pages:
+            content += page.extract_text()
 
-    reader = PdfReader(file_path)
-    content = ""
-    for page in reader.pages:
-        content += page.extract_text()
+        for chunk in split_string_by_length(content, CHUNK_SIZE):
+            print(f"Creating embedding for chunk: {chunk[0:20]}...")
+            
+            db.execute(
+                "INSERT INTO chunks (embedding, chunk) VALUES (%s, %s)",
+                [str(get_embedding(chunk)), chunk],
+            )
 
-    for chunk in split_string_by_length(content, CHUNK_SIZE):
-        print(f"Creating embedding for chunk: {chunk[20]}...")
-        
-        db.execute(
-            f"INSERT INTO items (embedding, chunk) VALUES ({model.encode(chunk)}, {chunk})",
-        )
-
-    print(f"\nTotal index time: {time.perf_counter() - tic}ms")
-    db.commit()
+        print(f"\nTotal index time: {time.perf_counter() - tic}ms")
+        db.commit()
 
 question = input("\nEnter question: ")
 
 # Create embedding from question.  Many RAG applications use a query rewriter before querying
 # the vector database.  For more information on query rewriting, see this whitepaper:
 #    https://arxiv.org/abs/2305.14283
-question_embedding = model.encode(question)
+question_embedding = get_embedding(question)
 
 result = db.execute(
-    f"""SELECT (embedding <=> {question_embedding})*100 as score, chunk 
-    FROM items 
-    ORDER BY score DESC
-    LIMIT 5"""
+    "SELECT (embedding <=> %s::vector)*100 as score, chunk FROM chunks ORDER BY score DESC LIMIT 5", 
+    (question_embedding,)
 )
+
 rows = list(result)
 
 print("scores: ", [row[0] for row in rows])
@@ -87,17 +134,16 @@ Answer the question using only the following context:
 Question: {question}
 """
 
-pipe = pipeline(
-    "text-generation", 
-    model=MODEL_ID,
-    torch_dtype=torch.bfloat16,
-    device_map="auto"
-)
-
-answer = pipe(prompt)
+answer = get_answer(
+    {
+        "inputs": {
+            "question": question,
+            "context": context,
+        }
+    })
 
 print(f"\nUsing {len(rows)} chunks in answer. Answer:\n")
-print(answer[0]['generated_text'])
+print(answer["answer"])
 
 view_prompt = input("\nWould you like to see the raw prompt? [Y/N] ")
 if view_prompt == "Y":
