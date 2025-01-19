@@ -11,9 +11,6 @@ import psycopg
 ### PyPDF for text extraction
 from PyPDF2 import PdfReader
 
-### Inference Client for HuggingFace
-# from huggingface_hub import InferenceClient
-
 ### Constants
 load_dotenv()
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
@@ -26,9 +23,6 @@ HEADERS = {
     "Content-Type": "application/json",
     "x-wait-for-model": "true",
 }
-
-### HuggingFace inference client
-# hf_inference_client = InferenceClient(api_key=hf_api_key)
 
 ### Argument parser
 parser = argparse.ArgumentParser(description="RAG Demo")
@@ -47,19 +41,6 @@ def get_embedding(payload):
         json=payload,
     )
     return response.json()
-
-# def get_answer(payload, client = hf_inference_client):
-#     messages = [
-#         {
-#             "role": "user",
-#             "content": payload["inputs"],
-#         }
-#     ]
-#     response = client.chat.completions.create(
-#         model=MODEL_ID,
-#         messages=messages,
-#     )
-#     return response.choices[0].message
 
 def get_answer(payload):
     response = requests.post(
