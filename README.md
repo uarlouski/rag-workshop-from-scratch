@@ -74,7 +74,7 @@ pyenv local 3.12.0
 `poetry run python -m rag_demo`
 
 You can skip the embedding step if you already have a database and want to experiment with different models. 
-`poetry run python -m rag_demo`
+`poetry run python -m rag_demo --skip-embedding-step`
 
 ### Check chunks table first 5 rows
 ```
