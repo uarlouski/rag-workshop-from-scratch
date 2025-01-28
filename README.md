@@ -7,6 +7,19 @@ DISCLAIMER: There are several concepts in this repository that can be implemente
 You should get acquainted first with RAG and [when to use it and when not to.](https://www.anthropic.com/news/contextual-retrieval)
 Also, feel free to check out the [BGE family of models](https://huggingface.co/BAAI/bge-small-en-v1.5) a series of API accessible models for many RAG pieces such as embeddings, retrieval, reranking, etc. 
 
+## Prerequisites
+
+- **Python 3.12 or higher**: Ensure you have Python 3.12 or a later version installed.
+- **Poetry**: Install Poetry on your machine for dependency management.
+- **Docker**: Ensure Docker is installed in your WSL environment.
+- **SSH Key**: Configure your SSH key with your GitHub account if you haven't already.
+
+Links:
+- [Updating Python to 3.12 in WSL](https://stackoverflow.com/questions/78284506/how-to-update-python-to-the-latest-version-3-12-2-in-wsl2)
+- [Installing Poetry with Official installer](https://python-poetry.org/docs/#installing-with-the-official-installer)
+- [Generating a new SSH key and adding it to the ssh-agent](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+
+
 ## Sample output
 ```
 Cleaning database...
@@ -31,33 +44,46 @@ Compiling declarative language model calls into self-improving pipelines
 
 This setup works for my WSL installation of Ubuntu with root access.
 
-Start a pgvector docker container:
-
+1. **Clone the repository**:
+```bash
+git clone git@github.com:smferro54/rag-workshop-from-scratch.git
+cd rag-workshop-from-scratch/
 ```
+
+2. **Start a pgvector docker container**:
+
+```bash
 docker run -p 6432:5432  --name pgvector -e POSTGRES_PASSWORD=postgres -d pgvector/pgvector:pg17
 ```
 
 Note: The host port for the docker container is 6432 instead of the normal 5432 to avoid port collisions
 
-Setup the database:
-```
+3. **Setup the database: Ensure you are in the directory where the repository was cloned.**
+```bash
 psql -h localhost -p 6432 -U postgres -c "CREATE DATABASE rag_demo;"
 psql -h localhost -p 6432 -U postgres rag_demo < schema.sql
 ```
+Note: All psql commands will prompt for a password, which is **"postgres"**.
+
 *Troubleshoot*: 
-```
+```bash
 sudo apt update
 sudo apt install postgresql-client-common
 sudo apt install postgresql-client
 ```
 
+4. **Create the .env file:**
+```bash
+touch .env
+```
+Note: You can use the example_env.txt as a reference for the required environment variables.
 
-Export your Hugging Face API Key environment variable:
+5. **Export your Hugging Face API Key environment variable:**
 ```
 source .env
 ```
 
-Poetry install:
+6. **Install dependencies with Poetry:**
 ```
 poetry install
 ```
