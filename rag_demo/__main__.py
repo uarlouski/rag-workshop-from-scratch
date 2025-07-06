@@ -34,11 +34,13 @@ parser.add_argument(
 args = parser.parse_args()
 
 ### Useful functions [can go to a utils.py file]
-def get_embedding(payload):
+def get_embedding(chunk):
     response = requests.post(
         EMBEDDINGS_API_URL,
         headers=HEADERS,
-        json=payload,
+        json={
+            "inputs": chunk
+        },
     )
     return response.json()
 
