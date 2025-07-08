@@ -18,7 +18,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 load_dotenv()
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
 CHUNK_SIZE = 2048
-EMBEDDINGS_API_URL = "https://api-inference.huggingface.co/models/BAAI/bge-small-en-v1.5"
+EMBEDDINGS_API_URL = "https://api-inference.huggingface.co/models/BAAI/bge-large-en-v1.5"
 MODEL_API_URL = "https://api-inference.huggingface.co/models/deepset/roberta-base-squad2"
 hf_api_key = os.environ.get("HF_API_KEY")
 HEADERS = {

@@ -10,6 +10,6 @@ CREATE EXTENSION vector;
 -- Create the chunks table
 CREATE TABLE chunks (
     id bigserial PRIMARY KEY,
-    embedding vector(384),
+    embedding vector(1024),
     chunk TEXT
 );
