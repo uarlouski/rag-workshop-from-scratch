@@ -1,6 +1,7 @@
 ### Utility libraries
 import argparse
 import os
+import sys
 import time
 from dotenv import load_dotenv
 import requests
@@ -10,6 +11,8 @@ import psycopg
 
 ### PyPDF for text extraction
 from PyPDF2 import PdfReader
+
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 ### Constants
 load_dotenv()
@@ -23,6 +26,11 @@ HEADERS = {
     "Content-Type": "application/json",
     "x-wait-for-model": "true",
 }
+
+chunks_table = os.environ.get("CHUNKS_TABLE")
+if not chunks_table:
+    print("Error: chunks table is not specified")
+    sys.exit(1)
 
 ### Argument parser
 parser = argparse.ArgumentParser(description="RAG Demo")
@@ -65,12 +73,15 @@ db = psycopg.Connection.connect(database_url)
 def split_string_by_length(input_string, length):
     return [input_string[i : i + length] for i in range(0, len(input_string), length)]
 
+def split_recursuvely(input_string, length):
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=length, chunk_overlap=200)
+    return text_splitter.split_text(input_string)
 
 # Loop through chunks from the pdf and create embeddings in the database
 
 if not args.skip_embedding_step:
     print("Cleaning database...")
-    db.execute("TRUNCATE TABLE chunks")
+    db.execute(f"TRUNCATE TABLE {chunks_table}")
 
     tic = time.perf_counter()
     for filename in os.listdir(DATA_DIR):
@@ -81,11 +92,12 @@ if not args.skip_embedding_step:
         for page in reader.pages:
             content += page.extract_text()
 
-        for chunk in split_string_by_length(content, CHUNK_SIZE):
+        # for chunk in split_string_by_length(content, CHUNK_SIZE):
+        for chunk in split_recursuvely(content, CHUNK_SIZE):
             print(f"Creating embedding for chunk: {chunk[0:20]}...")
             
             db.execute(
-                "INSERT INTO chunks (embedding, chunk) VALUES (%s, %s)",
+                f"INSERT INTO {chunks_table} (embedding, chunk) VALUES (%s, %s)",
                 [str(get_embedding(chunk)), chunk],
             )
 
@@ -100,7 +112,7 @@ question = input("\nEnter question: ")
 question_embedding = get_embedding(question)
 
 result = db.execute(
-    "SELECT (embedding <=> %s::vector)*100 as score, chunk FROM chunks ORDER BY score DESC LIMIT 5", 
+    f"SELECT (embedding <=> %s::vector)*100 as score, chunk FROM {chunks_table} ORDER BY score DESC LIMIT 5", 
     (question_embedding,)
 )
 
